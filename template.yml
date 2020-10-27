@@ -73,16 +73,36 @@ Resources:
       Runtime: nodejs12.x
 
   # queue
+  NewEventsQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 120
+      QueueName: ifood-orders-dlq
+
   NewEventsQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ifood-orders
+      VisibilityTimeout: 120
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt NewEventsQueueDlq.Arn
+        maxReceiveCount: 5
 
   # queue
+  PingSignalQueueDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      VisibilityTimeout: 120
+      QueueName: ping-signal-dlq
+
   PingSignalQueue:
     Type: AWS::SQS::Queue
     Properties:
       QueueName: ping-signal
+      VisibilityTimeout: 120
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt PingSignalQueueDlq.Arn
+        maxReceiveCount: 5
 
   #enqueue ping function
   EnqueuePingLambdaFunction:
@@ -91,7 +111,7 @@ Resources:
       Description: A Lambda function that enqueue pings
       Runtime: nodejs12.x
       CodeUri: src/
-      Handler: functions/enqueue-ping.handler
+      Handler: functions/enqueue-ping/index.handler
       MemorySize: 128
       Timeout: 30
       Role: !GetAtt ExecutionLambdaRole.Arn
@@ -114,7 +134,7 @@ Resources:
       Description: A Lambda function that polling when ping message is enqueued
       Runtime: nodejs12.x
       CodeUri: src/
-      Handler: functions/polling-ifood-trigger.handler
+      Handler: functions/polling-ifood-trigger/index.handler
       MemorySize: 128
       Timeout: 15
       Role: !GetAtt ExecutionLambdaRole.Arn
@@ -136,7 +156,7 @@ Resources:
       Description: A Lambda function that pulls new events from queue
       Runtime: nodejs12.x
       CodeUri: src/
-      Handler: functions/new-event-trigger.handler
+      Handler: functions/new-event-trigger/index.handler
       MemorySize: 128
       Timeout: 15
       Role: !GetAtt ExecutionLambdaRole.Arn
@@ -158,7 +178,7 @@ Resources:
       Description: A Lambda function that pulls new events from queue
       Runtime: nodejs12.x
       CodeUri: src/
-      Handler: functions/push-service.handler
+      Handler: functions/push-service/index.handler
       MemorySize: 128
       Timeout: 15
       Role: !GetAtt ExecutionLambdaRole.Arn
