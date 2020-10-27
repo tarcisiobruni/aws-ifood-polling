@@ -26,7 +26,7 @@ exports.handler = async (event) => {
             // TODO: Validate backendServer
             console.info(backendServer)
 
-            var batch = createBatch(backendServer, 4)
+            var batch = createBatch(backendServer, 2)
             console.info(batch)
             var result = await sqs.sendMessageBatch(batch).promise()
 
@@ -52,7 +52,9 @@ exports.handler = async (event) => {
 function createBatch(backendServer, time) {
     var delays = []
     var secondInterval = 60 / time;
-    for (let index = 0; index < time; index++) delays.push(index * secondInterval)
+    for (let index = 0; index < time; index++) {
+        delays.push(index * secondInterval)
+    }
 
     var messages = delays.map(delay => {
         return {
@@ -66,6 +68,6 @@ function createBatch(backendServer, time) {
         Entries: messages,
         QueueUrl: PING_QUEUE_URL
     }
-    
+
     return batch
 }

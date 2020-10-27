@@ -33,13 +33,15 @@ exports.handler = async (event) => {
                 var newEvents = Array.from(responsePolling.data).sort((a, b) => a.createdAt.localeCompare(b.createdAt))
                 
                 // // splits as a batch list. Batch has limitation of 10 message.
-                var eventsGroup = []
-                while (newEvents.length > 0) {
-                    eventsGroup.push(newEvents.splice(0, newEvents.length < 10 ? newEvents.length : 10))
-                }
+                // var eventsGroup = []
+                // while (newEvents.length > 0) {
+                //     eventsGroup.push(newEvents.splice(0, newEvents.length < 10 ? newEvents.length : 10))
+                // }
 
                 console.info("Sending events to queue")
-                var result = Promise.all(eventsGroup.map((events) => sqs.sendMessageBatch(createBatch(events, smartpagToken)).promise()));
+                // var result = await Promise.all(eventsGroup.map((events) => sqs.sendMessageBatch(createBatch(events, smartpagToken)).promise()));
+                var batch = createBatch(newEvents, smartpagToken)
+                var result = await sqs.sendMessageBatch(batch).promise();
                 console.info(result);
                 return result
             }
